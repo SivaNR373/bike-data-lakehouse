@@ -1,8 +1,8 @@
 # 🚲 Bike Data Lakehouse
 
-An end-to-end **Data Lakehouse project** built using Databricks and PySpark, implementing a **Bronze → Silver → Gold Medallion Architecture**.
+An end-to-end **batch Data Lakehouse pipeline** built using **Databricks and PySpark**, implementing a **Bronze → Silver → Gold Medallion Architecture**.
 
-The project ingests CRM and ERP source data, performs data cleansing and cross-system integration, builds a dimensional model, and orchestrates the complete pipeline using Databricks Jobs.
+The pipeline ingests CRM and ERP source data, performs data cleansing and cross-system integration, builds an analytics-ready dimensional model, and orchestrates the complete workflow using **Databricks Jobs**.
 
 ![Lakehouse Architecture](docs/architecture/lakehouse_architecture.png)
 
@@ -26,7 +26,7 @@ Databricks Job
 End-to-End Orchestration
 ```
 
-### Pipeline
+### Pipeline Flow
 
 ```text
 bronze_ingestion
@@ -40,15 +40,15 @@ gold_orchestration
 
 ## 🥉 Bronze Layer
 
-Raw source data is ingested from CRM and ERP CSV files into Delta tables.
+The Bronze layer ingests the raw CRM and ERP CSV source files into Delta tables with minimal transformation.
 
-### CRM
+### CRM Sources
 
 - `crm_cust_info`
 - `crm_prd_info`
 - `crm_sales_details`
 
-### ERP
+### ERP Sources
 
 - `erp_cust_az12`
 - `erp_loc_a101`
@@ -58,24 +58,27 @@ Raw source data is ingested from CRM and ERP CSV files into Delta tables.
 
 ## 🥈 Silver Layer
 
-The Silver layer cleans, standardizes, validates, and integrates the source data.
+The Silver layer cleans, standardizes, validates, and integrates the Bronze data.
 
-### CRM
+### CRM Transformations
 
 - Customer cleansing and deduplication
-- Product standardization
+- Product attribute standardization
 - Sales date conversion and validation
 - Business-key validation
-- Customer and product referential-integrity checks
+- Customer referential-integrity validation
+- Product referential-integrity validation
+- Cross-system product-key reconciliation
 
-### ERP
+### ERP Transformations
 
 - Customer gender standardization
 - Invalid/future birth-date handling
 - Country normalization
 - Product-category standardization
+- Business-key validation
 
-Cross-system identifiers between CRM and ERP were normalized to establish relationships between datasets.
+CRM and ERP identifiers were normalized where the source systems used different identifier formats, allowing the datasets to be integrated reliably.
 
 ---
 
@@ -85,19 +88,23 @@ The Gold layer provides analytics-ready dimensional tables.
 
 ### `dim_customers`
 
-Customer master dimension combining CRM and ERP attributes.
+A customer dimension combining CRM customer information with ERP birth-date and location attributes.
 
 ### `dim_products`
 
-Product dimension enriched with ERP category and maintenance information.
+A product dimension combining CRM product information with ERP category and maintenance metadata.
+
+Historical product versions are retained rather than deduplicating solely by product key.
 
 ### `fact_sales`
 
-Sales transaction fact table at the grain of:
+A sales transaction fact table with the grain:
 
 ```text
 order_number + product_key
 ```
+
+It contains order, product, customer, date, quantity, price, and sales information.
 
 ### Final Gold Tables
 
@@ -111,54 +118,70 @@ order_number + product_key
 
 ## 🔄 Orchestration
 
-Silver transformations are executed through:
+### Silver Orchestration
+
+The Silver parent notebook executes six transformation notebooks:
 
 ```text
 silver_orchestration
-├── CRM Customer
-├── CRM Product
-├── CRM Sales
-├── ERP Customer
-├── ERP Location
-└── ERP Product Category
+│
+├── silver_crm_cust_info
+├── silver_crm_prd_info
+├── silver_crm_sales_details
+├── silver_erp_cust_az12
+├── silver_erp_loc_a101
+└── silver_erp_px_cat_g1v2
 ```
 
-Gold transformations are executed through:
+### Gold Orchestration
+
+The Gold parent notebook executes three Gold transformation notebooks:
 
 ```text
 gold_orchestration
+│
 ├── dim_customers
 ├── dim_products
 └── fact_sales
 ```
 
-The complete pipeline is orchestrated using **Databricks Jobs**:
+### Databricks Job
+
+The complete batch pipeline is orchestrated through a Databricks Job:
 
 ```text
-Bronze
-  ↓
-Silver
-  ↓
-Gold
+bronze_ingestion
+       ↓
+silver_orchestration
+       ↓
+gold_orchestration
 ```
 
-The end-to-end Job has been successfully executed.
+The complete Bronze → Silver → Gold workflow has been successfully executed end-to-end.
 
 ---
 
 ## 🔍 Data Quality
 
-The project includes validation for:
+Data-quality validation was performed throughout the pipeline, including:
 
-- NULL values
-- Duplicate records
+- NULL-value checks
+- Duplicate detection
 - Business-key uniqueness
 - Date validity
-- Date relationships
+- Date relationship validation
 - Referential integrity
 - Cross-system identifier matching
 - Product-key reconciliation
-- Post-transformation row counts
+- Row-count validation
+- Post-transformation sanity checks
+
+### Verified Relationships
+
+- Sales → CRM Customers: **0 unmatched**
+- Sales → CRM Products: **0 unmatched**
+- CRM Customers → ERP Customers: **0 unmatched**
+- CRM Customers → ERP Locations: **0 unmatched**
 
 ---
 
@@ -166,9 +189,9 @@ The project includes validation for:
 
 - **Databricks**
 - **PySpark**
+- **Python**
 - **Delta Lake**
 - **Unity Catalog**
-- **Python**
 - **Databricks Jobs**
 - **Git / GitHub**
 - **Draw.io**
@@ -191,6 +214,7 @@ bike-data-lakehouse/
 │
 ├── silver/
 │   ├── silver_orchestration.ipynb
+│   │
 │   ├── crm/
 │   │   ├── silver_crm_cust_info.ipynb
 │   │   ├── silver_crm_prd_info.ipynb
@@ -212,23 +236,26 @@ bike-data-lakehouse/
 
 ## 📚 Credits
 
-This project was developed as a hands-on implementation and learning project based on the **Data Engineering concepts and project guidance from Data with Baraa**.
+This project was developed as a hands-on Data Engineering implementation based on the **Data Engineering concepts, educational material, and project guidance provided by Baraa Khatib Salkini (DataWithBaraa)**.
 
-Credit and appreciation to **Data with Baraa** for the educational material and project inspiration.
+Special thanks to **Baraa Khatib Salkini / DataWithBaraa** for the learning resources and project inspiration.
+
+- **DataWithBaraa:** [GitHub](https://github.com/DataWithBaraa)
+- **DataWithBaraa:** [YouTube](https://www.youtube.com/@DataWithBaraa)
 
 ---
 
 ## 👨‍💻 Author
 
-**Adaka Sivanagaraju**
+### Adaka Sivanagaraju
 
-Data Engineering | SQL | Python | PySpark | Databricks | Delta Lake
+**Data Engineering | SQL | Python | PySpark | Databricks | Delta Lake**
 
-- GitHub: [SivaNR373](https://github.com/SivaNR373)
-- LinkedIn: [sivan373](https://www.linkedin.com/in/sivan373/)
-- Email: `sivanagaraju373@gmail.com`
+- 🐙 GitHub: [SivaNR373](https://github.com/SivaNR373)
+- 💼 LinkedIn: [sivan373](https://www.linkedin.com/in/sivan373/)
+- 📧 Email: [sivanagaraju373@gmail.com](mailto:sivanagaraju373@gmail.com)
 
-For questions, feedback, or collaboration, feel free to reach out.
+For questions, feedback, collaboration, or project discussions, feel free to reach out.
 
 ---
 
