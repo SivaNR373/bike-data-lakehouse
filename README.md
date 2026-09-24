@@ -54,7 +54,12 @@ The Bronze layer ingests the raw CRM and ERP CSV source files into Delta tables 
 - `erp_loc_a101`
 - `erp_px_cat_g1v2`
 
----
+### Bronze Engineering Practices
+
+- Explicit source schemas defined for all six source datasets
+- Raw source data preserved before downstream transformations
+- CRM and ERP datasets stored as Bronze Delta tables
+- Schema definitions maintained explicitly to avoid relying on automatic schema inference
 
 ## 🥈 Silver Layer
 
@@ -161,21 +166,22 @@ The complete Bronze → Silver → Gold workflow has been successfully executed 
 
 ---
 
-## 🔍 Data Quality
+## ⚙️ Engineering Practices
 
-Data-quality validation was performed throughout the pipeline, including:
+The project focuses on practical Data Engineering patterns rather than only implementing transformations.
 
-- NULL-value checks
-- Duplicate detection
-- Business-key uniqueness
-- Date validity
-- Date relationship validation
-- Referential integrity
-- Cross-system identifier matching
-- Product-key reconciliation
-- Row-count validation
-- Post-transformation sanity checks
-
+- Medallion Architecture
+- Explicit source schema management
+- Delta Lake tables
+- Data-quality validation
+- Referential-integrity checks
+- Cross-system identifier reconciliation
+- Dimensional modeling
+- Notebook-level orchestration
+- Databricks Job orchestration
+- Git/GitHub version control
+- End-to-end pipeline validation
+- 
 ### Verified Relationships
 
 - Sales → CRM Customers: **0 unmatched**
