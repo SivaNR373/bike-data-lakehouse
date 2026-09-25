@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bike Data Lakehouse | Project Documentation</title>
+<style>
+:root{
+  --bg:#050816;--panel:#0d1424;--panel2:#111a2d;--border:#202c42;
+  --text:#eef2ff;--muted:#9aa8bd;--blue:#38bdf8;--purple:#a78bfa;
+  --green:#34d399;--bronze:#d97706;--silver:#94a3b8;--gold:#eab308;
+  --danger:#fb7185;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:
+  radial-gradient(circle at 10% 10%,rgba(56,189,248,.08),transparent 26%),
+  radial-gradient(circle at 90% 20%,rgba(167,139,250,.08),transparent 28%),
+  var(--bg);color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  line-height:1.7
+}
+.container{max-width:1180px;margin:auto;padding:28px 22px 80px}
+a{color:var(--blue);text-decoration:none}
+a:hover{color:#fff}
+.hero{
+  position:relative;overflow:hidden;border:1px solid var(--border);border-radius:28px;
+  padding:52px;background:linear-gradient(145deg,rgba(17,26,45,.96),rgba(7,12,24,.94));
+  box-shadow:0 30px 80px rgba(0,0,0,.28)
+}
+.hero:before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--blue),var(--purple),var(--green))}
+.eyebrow{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-transform:uppercase;letter-spacing:.12em;font-size:.76rem;font-weight:800;color:var(--blue)}
+h1{font-size:clamp(2.7rem,6vw,4.8rem);line-height:1.02;letter-spacing:-.045em;margin:16px 0 18px}
+.subtitle{max-width:850px;color:var(--muted);font-size:1.12rem}
+.authorbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:32px;padding-top:24px;border-top:1px solid var(--border)}
+.badge{padding:5px 11px;border:1px solid rgba(56,189,248,.25);border-radius:999px;color:var(--blue);background:rgba(56,189,248,.08);font-size:.76rem;font-weight:800}
+.nav{
+  position:sticky;top:14px;z-index:20;display:flex;gap:8px;overflow:auto;
+  margin:22px 0;padding:10px;border:1px solid var(--border);border-radius:18px;
+  background:rgba(9,15,28,.78);backdrop-filter:blur(14px)
+}
+.nav a{white-space:nowrap;padding:9px 12px;border-radius:10px;color:var(--muted);font-size:.86rem;font-weight:700}
+.nav a:hover{background:var(--panel2);color:#fff}
+.section{
+  margin:22px 0;padding:36px;border:1px solid var(--border);border-radius:24px;
+  background:rgba(13,20,36,.9);box-shadow:0 18px 55px rgba(0,0,0,.16)
+}
+.section-head{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+.num{font:800 1rem ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--purple)}
+h2{font-size:1.8rem;letter-spacing:-.025em;margin:0}
+h3{font-size:1.18rem;margin:28px 0 12px;padding-bottom:9px;border-bottom:1px solid var(--border)}
+p{color:#cbd5e1}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.card{
+  background:#080e1b;border:1px solid var(--border);border-radius:16px;padding:20px;
+  transition:.2s transform,.2s border-color
+}
+.card:hover{transform:translateY(-2px);border-color:#3b4b67}
+.label{color:var(--muted);font-size:.73rem;text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+.value{font-size:1.55rem;font-weight:850;margin-top:6px}
+.small{font-size:.84rem;color:var(--muted)}
+.flow{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;margin:22px 0}
+.node{flex:1;min-width:190px;border:1px solid var(--border);border-radius:16px;padding:22px;text-align:center}
+.node .title{font-size:1.05rem;font-weight:850}
+.node .desc{font-size:.8rem;color:var(--muted);margin-top:4px}
+.bronze{border-top:3px solid var(--bronze);background:linear-gradient(180deg,rgba(217,119,6,.09),transparent)}
+.silver{border-top:3px solid var(--silver);background:linear-gradient(180deg,rgba(148,163,184,.08),transparent)}
+.gold{border-top:3px solid var(--gold);background:linear-gradient(180deg,rgba(234,179,8,.09),transparent)}
+.arrow{display:grid;place-items:center;color:#64748b;font-size:1.4rem;padding:0 4px}
+table{width:100%;border-collapse:collapse;margin:16px 0}
+th,td{padding:13px 14px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+th{font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+td{color:#d8e0ec}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#dbeafe}
+pre{
+  margin:0;background:#03060d;border:1px solid #1c2639;border-radius:14px;padding:20px;
+  overflow:auto;color:#dbeafe;font:500 .83rem/1.55 ui-monospace,SFMono-Regular,Menlo,monospace
+}
+.code{position:relative;margin:18px 0}
+.copy{
+  position:absolute;right:10px;top:10px;z-index:2;background:#121b2d;color:#aab7ca;
+  border:1px solid #2a3952;border-radius:8px;padding:6px 10px;font-size:.72rem;font-weight:800;cursor:pointer
+}
+.copy:hover{color:#fff;border-color:#526580}
+.note{
+  border-left:4px solid var(--blue);background:rgba(56,189,248,.06);
+  padding:15px 18px;border-radius:0 12px 12px 0;margin:18px 0
+}
+.success{
+  border-left:4px solid var(--green);background:rgba(52,211,153,.055);
+  padding:15px 18px;border-radius:0 12px 12px 0;margin:18px 0
+}
+.warning{
+  border-left:4px solid var(--danger);background:rgba(251,113,133,.055);
+  padding:15px 18px;border-radius:0 12px 12px 0;margin:18px 0
+}
+.status{display:inline-flex;align-items:center;gap:6px;color:var(--green);font-weight:850}
+.pill{display:inline-block;padding:4px 9px;border-radius:999px;background:#101a2d;border:1px solid var(--border);font-size:.74rem;color:#cbd5e1;margin:2px}
+.layer-title{display:flex;align-items:center;gap:10px}
+.layer-dot{width:11px;height:11px;border-radius:50%}
+.dot-bronze{background:var(--bronze)}.dot-silver{background:var(--silver)}.dot-gold{background:var(--gold)}
+.tree{
+  background:#080e1b;border:1px solid var(--border);border-radius:14px;padding:18px;
+  font:500 .83rem/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;color:#b9c6d9;white-space:pre-wrap
+}
+.erd{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:14px;align-items:center;margin:20px 0}
+.erd-card{border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#080e1b}
+.erd-head{padding:12px 14px;font-weight:850;background:rgba(234,179,8,.1);color:#f4d35e}
+.erd-head.fact{background:rgba(56,189,248,.1);color:var(--blue)}
+.erd-body{padding:14px;font:500 .78rem/1.8 ui-monospace,SFMono-Regular,Menlo,monospace;color:#9fb0c7}
+.pk{color:var(--blue)}.fk{color:var(--purple)}
+.erd-arrow{text-align:center;color:#64748b;font-weight:800}
+footer{padding:25px 5px;color:var(--muted);text-align:center;font-size:.82rem}
+@media(max-width:800px){
+  .hero{padding:34px 24px}.section{padding:26px 20px}.erd{grid-template-columns:1fr}
+  .erd-arrow{transform:rotate(90deg)}
+}
+@media print{
+  body{background:#fff;color:#111}.hero,.section{box-shadow:none;background:#fff;color:#111}
+  .nav{display:none}.section{break-inside:avoid}
+  p,td{color:#333}.card,.tree,pre{background:#f7f7f7;color:#111}
+  a{color:#0369a1}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="hero">
+  <div class="eyebrow">Project Documentation · Data Engineering</div>
+  <h1>🚲 Bike Data Lakehouse</h1>
+  <p class="subtitle">
+    An end-to-end batch Data Engineering pipeline built with Databricks and PySpark,
+    implementing a Bronze → Silver → Gold Medallion Architecture for CRM and ERP source data.
+  </p>
+  <div class="authorbar">
+    <strong>Adaka Sivanagaraju</strong>
+    <span class="badge">Data Engineering</span>
+    <span class="badge">Databricks</span>
+    <span class="badge">PySpark</span>
+    <a href="https://github.com/SivaNR373/bike-data-lakehouse" target="_blank">GitHub ↗</a>
+    <a href="https://github.com/SivaNR373" target="_blank">Profile ↗</a>
+    <a href="https://www.linkedin.com/in/sivan373/" target="_blank">LinkedIn ↗</a>
+  </div>
+</header>
+
+<nav class="nav">
+  <a href="#summary">01 Summary</a>
+  <a href="#architecture">02 Architecture</a>
+  <a href="#pipeline">03 Pipeline</a>
+  <a href="#orchestration">04 Orchestration</a>
+  <a href="#challenges">05 Challenges</a>
+  <a href="#future">06 Future</a>
+</nav>
+
+<section id="summary" class="section">
+  <div class="section-head"><span class="num">01</span><h2>Executive Summary</h2></div>
+  <p>
+    The <strong>Bike Data Lakehouse</strong> is a hands-on batch Data Engineering project that ingests
+    six CSV datasets from CRM and ERP source systems, stores them as Bronze Delta tables, applies
+    cleansing and cross-system validation in Silver, and produces an analytics-ready Gold dimensional model.
+  </p>
+  <div class="grid">
+    <div class="card"><div class="label">Source Systems</div><div class="value">CRM + ERP</div><div class="small">3 datasets from each system</div></div>
+    <div class="card"><div class="label">Gold Tables</div><div class="value">3</div><div class="small">dim_customers · dim_products · fact_sales</div></div>
+    <div class="card"><div class="label">Gold Rows</div><div class="value">79,279</div><div class="small">18,484 + 397 + 60,398</div></div>
+    <div class="card"><div class="label">Execution Model</div><div class="value">Batch</div><div class="small">Databricks Job orchestration</div></div>
+  </div>
+  <div class="success">
+    <strong>Completed pipeline:</strong> Bronze ingestion → Silver transformations → Gold dimensional model,
+    with notebook-level orchestration and a Databricks Job dependency chain.
+  </div>
+</section>
+
+<section id="architecture" class="section">
+  <div class="section-head"><span class="num">02</span><h2>Architecture & Technology Stack</h2></div>
+  <div class="flow">
+    <div class="node bronze"><div class="title">🥉 Bronze</div><div class="desc">Raw source data → Delta tables</div></div>
+    <div class="arrow">→</div>
+    <div class="node silver"><div class="title">🥈 Silver</div><div class="desc">Cleaned, standardized & validated</div></div>
+    <div class="arrow">→</div>
+    <div class="node gold"><div class="title">🥇 Gold</div><div class="desc">Analytics-ready dimensional model</div></div>
+  </div>
+
+  <h3>Technology Stack</h3>
+  <div>
+    <span class="pill">Databricks</span><span class="pill">Serverless Compute</span>
+    <span class="pill">PySpark</span><span class="pill">Python</span><span class="pill">Delta Lake</span>
+    <span class="pill">Unity Catalog</span><span class="pill">Databricks Jobs</span>
+    <span class="pill">Git</span><span class="pill">GitHub</span><span class="pill">Draw.io</span>
+  </div>
+
+  <table>
+    <tr><th>Component</th><th>Implementation</th></tr>
+    <tr><td>Compute</td><td>Databricks Serverless compute</td></tr>
+    <tr><td>Processing</td><td>PySpark / Spark DataFrames</td></tr>
+    <tr><td>Storage format</td><td>Delta Lake</td></tr>
+    <tr><td>Governance</td><td>Unity Catalog with <code>bike_lakehouse</code> catalog and bronze/silver/gold schemas</td></tr>
+    <tr><td>Raw source storage</td><td>Managed volume: <code>/Volumes/bike_lakehouse/bronze/raw_sources/</code></td></tr>
+    <tr><td>Version control</td><td>Git / GitHub, repository branch <code>main</code></td></tr>
+    <tr><td>Orchestration</td><td>Databricks notebooks + Databricks Job dependencies</td></tr>
+  </table>
+</section>
+
+<section id="pipeline" class="section">
+  <div class="section-head"><span class="num">03</span><h2>Pipeline Design — Medallion Architecture</h2></div>
+
+  <div class="layer-title"><span class="layer-dot dot-bronze"></span><h3 style="border:0;margin:0">Bronze Layer · Raw Ingestion</h3></div>
+  <p>
+    The Bronze notebook reads the six CRM and ERP CSV files from the managed volume and writes them
+    as Delta tables under <code>bike_lakehouse.bronze</code>. Explicit <code>StructType</code> schemas were added
+    instead of relying on <code>inferSchema=True</code>.
+  </p>
+
+  <div class="tree">CRM
+├── crm_cust_info.csv
+├── prd_info.csv
+└── sales_details.csv
+
+ERP
+├── CUST_AZ12.csv
+├── LOC_A101.csv
+└── PX_CAT_G1V2.csv</div>
+
+  <h3>Bronze Tables</h3>
+  <table>
+    <tr><th>Source</th><th>Bronze Delta Table</th></tr>
+    <tr><td>CRM Customer</td><td><code>bike_lakehouse.bronze.crm_cust_info</code></td></tr>
+    <tr><td>CRM Product</td><td><code>bike_lakehouse.bronze.crm_prd_info</code></td></tr>
+    <tr><td>CRM Sales</td><td><code>bike_lakehouse.bronze.crm_sales_details</code></td></tr>
+    <tr><td>ERP Customer</td><td><code>bike_lakehouse.bronze.erp_cust_az12</code></td></tr>
+    <tr><td>ERP Location</td><td><code>bike_lakehouse.bronze.erp_loc_a101</code></td></tr>
+    <tr><td>ERP Product Category</td><td><code>bike_lakehouse.bronze.erp_px_cat_g1v2</code></td></tr>
+  </table>
+
+  <h3>Explicit Source Schema Example</h3>
+  <div class="code">
+    <button class="copy" onclick="copyCode(this)">Copy</button>
+    <pre>from pyspark.sql.types import (
+    StructType,
+    StructField,
+    StringType,
+    IntegerType,
+    DateType
+)
+
+crm_cust_info_schema = StructType([
+    StructField("cst_id", IntegerType(), True),
+    StructField("cst_key", StringType(), True),
+    StructField("cst_firstname", StringType(), True),
+    StructField("cst_lastname", StringType(), True),
+    StructField("cst_marital_status", StringType(), True),
+    StructField("cst_gndr", StringType(), True),
+    StructField("cst_create_date", DateType(), True)
+])
+
+crm_sales_details_schema = StructType([
+    StructField("sls_ord_num", StringType(), True),
+    StructField("sls_prd_key", StringType(), True),
+    StructField("sls_cust_id", IntegerType(), True),
+    StructField("sls_order_dt", IntegerType(), True),
+    StructField("sls_ship_dt", IntegerType(), True),
+    StructField("sls_due_dt", IntegerType(), True),
+    StructField("sls_sales", IntegerType(), True),
+    StructField("sls_quantity", IntegerType(), True),
+    StructField("sls_price", IntegerType(), True)
+])</pre>
+  </div>
+
+  <h3>Bronze Write Pattern</h3>
+  <div class="code">
+    <button class="copy" onclick="copyCode(this)">Copy</button>
+    <pre>df.write.format("delta") \
+    .mode("overwrite") \
+    .saveAsTable("bike_lakehouse.bronze.crm_cust_info")</pre>
+  </div>
+
+  <div class="note">
+    <strong>Engineering decision:</strong> source column names were preserved in Bronze. When the explicit schema
+    initially used <code>cst_gender</code> instead of the actual source column <code>cst_gndr</code>, Delta metadata validation
+    caught the mismatch. The schema was corrected to match the source rather than enabling schema merging.
+  </div>
+
+  <div class="layer-title"><span class="layer-dot dot-silver"></span><h3 style="border:0;margin:0">Silver Layer · Cleansing, Validation & Integration</h3></div>
+  <p>
+    Six Silver notebooks transform the Bronze datasets into clean, business-friendly tables.
+    The work includes null handling, trimming, standardization, deduplication where appropriate,
+    date validation, referential-integrity checks, and CRM/ERP identifier reconciliation.
+  </p>
+
+  <table>
+    <tr><th>Notebook</th><th>Silver Table</th><th>Final Rows</th></tr>
+    <tr><td>silver_crm_cust_info</td><td><code>bike_lakehouse.silver.crm_customers</code></td><td>18,484</td></tr>
+    <tr><td>silver_crm_prd_info</td><td><code>bike_lakehouse.silver.crm_products</code></td><td>397</td></tr>
+    <tr><td>silver_crm_sales_details</td><td><code>bike_lakehouse.silver.crm_sales_details</code></td><td>60,398</td></tr>
+    <tr><td>silver_erp_cust_az12</td><td><code>bike_lakehouse.silver.erp_customers</code></td><td>18,484</td></tr>
+    <tr><td>silver_erp_loc_a101</td><td><code>bike_lakehouse.silver.erp_locations</code></td><td>18,484</td></tr>
+    <tr><td>silver_erp_px_cat_g1v2</td><td><code>bike_lakehouse.silver.erp_product_categories</code></td><td>37</td></tr>
+  </table>
+
+  <div class="grid">
+    <div class="card"><div class="label">Customer Quality</div><div class="small">Removed null customer IDs, deduplicated customer keys using completeness/latest-date logic, standardized gender values.</div></div>
+    <div class="card"><div class="label">Sales Quality</div><div class="small">Validated order/ship/due date relationships, business-key uniqueness, customer matches and product-key matches.</div></div>
+    <div class="card"><div class="label">ERP Quality</div><div class="small">Normalized gender and country values, handled invalid/future birth dates, validated customer identifiers.</div></div>
+    <div class="card"><div class="label">Cross-System</div><div class="small">CRM and ERP identifiers were normalized to support reliable integration.</div></div>
+  </div>
+
+  <h3>Silver Write Pattern</h3>
+  <div class="code">
+    <button class="copy" onclick="copyCode(this)">Copy</button>
+    <pre>df_silver.write.format("delta").mode("overwrite").saveAsTable(
+    "bike_lakehouse.silver.crm_customers"
+)</pre>
+  </div>
+
+  <div class="success">
+    <strong>Validation results:</strong> Sales → CRM Customers: 0 unmatched · Sales → CRM Products: 0 unmatched ·
+    CRM Customers → ERP Customers: 0 unmatched · CRM Customers → ERP Locations: 0 unmatched.
+  </div>
+
+  <div class="layer-title"><span class="layer-dot dot-gold"></span><h3 style="border:0;margin:0">Gold Layer · Dimensional Model</h3></div>
+  <p>
+    The Gold layer contains three analytics-ready tables. The sales fact grain is one row per
+    <code>order_number + product_key</code>. Product history is retained in the product dimension rather than
+    deduplicating product versions solely by product key.
+  </p>
+
+  <div class="erd">
+    <div class="erd-card">
+      <div class="erd-head">dim_customers · 18,484</div>
+      <div class="erd-body">
+        <div class="pk">customer_id</div>
+        <div>customer_key</div><div>first_name</div><div>last_name</div>
+        <div>marital_status</div><div>gender</div><div>birth_date</div><div>country</div>
+      </div>
+    </div>
+    <div class="erd-arrow">1 : ∞<br><br><strong>fact_sales</strong><br><br>∞ : 1</div>
+    <div class="erd-card">
+      <div class="erd-head">dim_products · 397</div>
+      <div class="erd-body">
+        <div class="pk">product_id</div><div>product_key</div><div>product_name</div>
+        <div>product_cost</div><div>category_id</div><div>category</div><div>subcategory</div>
+        <div>maintenance_required</div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="label">fact_sales · 60,398</div>
+    <div class="small" style="margin-top:8px">
+      Grain: <code>order_number + product_key</code>. Contains order, customer, product, date,
+      quantity, unit price and sales information. The fact was deliberately not joined to a single
+      historical product dimension row because product keys have multiple versions.
+    </div>
+  </div>
+
+  <h3>Gold Write Example</h3>
+  <div class="code">
+    <button class="copy" onclick="copyCode(this)">Copy</button>
+    <pre>df_gold.write.format("delta").mode("overwrite").saveAsTable(
+    "bike_lakehouse.gold.fact_sales"
+)</pre>
+  </div>
+
+  <h3>Final Gold Verification</h3>
+  <table>
+    <tr><th>Gold Table</th><th>Rows</th><th>Validation</th></tr>
+    <tr><td><code>bike_lakehouse.gold.dim_customers</code></td><td>18,484</td><td>0 duplicate IDs · 0 null IDs</td></tr>
+    <tr><td><code>bike_lakehouse.gold.dim_products</code></td><td>397</td><td>0 duplicate product IDs · 397/397 category matches</td></tr>
+    <tr><td><code>bike_lakehouse.gold.fact_sales</code></td><td>60,398</td><td>0 duplicate fact grain · 0 unmatched customers/products</td></tr>
+  </table>
+</section>
+
+<section id="orchestration" class="section">
+  <div class="section-head"><span class="num">04</span><h2>Orchestration & Scheduling</h2></div>
+  <p>
+    The pipeline is organized into parent orchestration notebooks and executed through a Databricks Job.
+    The dependency chain is sequential so downstream layers consume completed upstream outputs.
+  </p>
+
+  <div class="flow">
+    <div class="node bronze"><div class="title">bronze_ingestion</div><div class="desc">6 raw datasets → Bronze</div></div>
+    <div class="arrow">↓</div>
+    <div class="node silver"><div class="title">silver_orchestration</div><div class="desc">6 Silver notebooks</div></div>
+    <div class="arrow">↓</div>
+    <div class="node gold"><div class="title">gold_orchestration</div><div class="desc">3 Gold notebooks</div></div>
+  </div>
+
+  <h3>Silver Orchestration</h3>
+  <div class="tree">silver_orchestration
+├── silver_crm_cust_info
+├── silver_crm_prd_info
+├── silver_crm_sales_details
+├── silver_erp_cust_az12
+├── silver_erp_loc_a101
+└── silver_erp_px_cat_g1v2</div>
+
+  <h3>Gold Orchestration</h3>
+  <div class="tree">gold_orchestration
+├── dim_customers
+├── dim_products
+└── fact_sales</div>
+
+  <h3>Databricks Job</h3>
+  <div class="card">
+    <div class="status">● End-to-end batch workflow completed</div>
+    <div class="small" style="margin-top:8px">
+      Job dependency chain: <code>bronze_ingestion → silver_orchestration → gold_orchestration</code>.
+      The project uses notebook-level orchestration and Databricks Job task dependencies.
+    </div>
+  </div>
+</section>
+
+<section id="challenges" class="section">
+  <div class="section-head"><span class="num">05</span><h2>Key Engineering Challenges Solved</h2></div>
+
+  <h3>1. Delta Metadata Mismatch</h3>
+  <p>
+    Explicit schema hardening exposed a mismatch between the existing Bronze table's <code>cst_gndr</code>
+    column and an initially defined <code>cst_gender</code> field. The solution was to correct the explicit schema
+    to match the raw source contract rather than using <code>mergeSchema</code>.
+  </p>
+
+  <h3>2. Sales Date Parsing</h3>
+  <p>
+    Source sales dates were integer values in <code>yyyyMMdd</code> form. Normal date conversion did not safely
+    handle invalid values such as <code>0</code> and <code>32154</code>, so tolerant date parsing was used.
+    The final Silver table retained 19 null order dates corresponding to invalid source values.
+  </p>
+
+  <h3>3. Customer Deduplication</h3>
+  <p>
+    The CRM customer source contained duplicate customer IDs/keys. The Silver transformation removed null
+    customer IDs and selected the most complete/latest appropriate record instead of arbitrarily dropping duplicates.
+  </p>
+
+  <h3>4. Cross-System Identifier Reconciliation</h3>
+  <p>
+    CRM and ERP systems used different customer and product identifier formats. The pipeline normalized the
+    relevant identifier structures so customer and product relationships could be validated across systems.
+  </p>
+
+  <h3>5. Historical Product Versions</h3>
+  <p>
+    Product keys appeared across multiple product versions. The Gold product dimension therefore retained the
+    historical rows, while the sales fact kept its business keys instead of joining to a potentially multiplying
+    historical dimension row.
+  </p>
+
+  <h3>6. Git Synchronization During Development</h3>
+  <p>
+    During repository synchronization, local Bronze changes were preserved while bringing the Databricks Git
+    workspace up to date.
+  </p>
+  <div class="code">
+    <button class="copy" onclick="copyCode(this)">Copy</button>
+    <pre>git stash push -m "Bronze explicit schemas"
+git pull --ff-only
+git stash pop</pre>
+  </div>
+</section>
+
+<section id="future" class="section">
+  <div class="section-head"><span class="num">06</span><h2>Next Steps & Future Enhancements</h2></div>
+  <p>
+    The current implementation intentionally focuses on a clean, complete batch Medallion pipeline.
+    The following items are future V2 hardening opportunities rather than features claimed as implemented today.
+  </p>
+  <div class="grid">
+    <div class="card"><div class="label">Incremental Processing</div><div class="small">Move beyond full overwrite ingestion toward incremental/CDC patterns where source behavior supports them.</div></div>
+    <div class="card"><div class="label">Audit Metadata</div><div class="small">Add ingestion timestamps, batch/run identifiers and operational metadata.</div></div>
+    <div class="card"><div class="label">Operational Framework</div><div class="small">Reusable ingestion framework, parameterization, structured logging, retries and alerting.</div></div>
+    <div class="card"><div class="label">Testing</div><div class="small">Automated data-quality tests and regression checks for pipeline deployments.</div></div>
+    <div class="card"><div class="label">CI/CD</div><div class="small">Formal deployment workflow around Git-based development and Databricks assets.</div></div>
+    <div class="card"><div class="label">Performance</div><div class="small">Optimize partitioning, file sizes, joins and Spark execution as data volume grows.</div></div>
+    <div class="card"><div class="label">Monitoring</div><div class="small">Job-level monitoring, failure alerts and operational dashboards.</div></div>
+    <div class="card"><div class="label">Streaming</div><div class="small">Extend the batch foundation into a separate real-time/streaming implementation as a future project.</div></div>
+  </div>
+
+  <div class="warning">
+    <strong>Scope note:</strong> Incremental loading, audit columns, production monitoring, CI/CD automation,
+    and streaming are not presented as implemented features of this current project.
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head"><span class="num">07</span><h2>Repository</h2></div>
+  <p>The implementation and project assets are maintained in the GitHub repository.</p>
+  <div class="grid">
+    <div class="card"><div class="label">Repository</div><div style="margin-top:8px"><a href="https://github.com/SivaNR373/bike-data-lakehouse" target="_blank">SivaNR373/bike-data-lakehouse ↗</a></div></div>
+    <div class="card"><div class="label">Architecture</div><div class="small" style="margin-top:8px"><code>docs/architecture/lakehouse_architecture.png</code></div></div>
+    <div class="card"><div class="label">Branch</div><div class="value">main</div></div>
+  </div>
+</section>
+
+<footer>
+  🚲 Bike Data Lakehouse · Databricks · PySpark · Delta Lake · Unity Catalog<br>
+  Built as a hands-on Data Engineering portfolio project.
+</footer>
+</div>
+
+<script>
+function copyCode(btn){
+  const code=btn.nextElementSibling.innerText;
+  navigator.clipboard.writeText(code).then(()=>{
+    const old=btn.textContent; btn.textContent="Copied!";
+    btn.style.color="#34d399";
+    setTimeout(()=>{btn.textContent=old;btn.style.color="";},1400);
+  }).catch(()=>{btn.textContent="Failed";});
+}
+</script>
+</body>
+</html>
